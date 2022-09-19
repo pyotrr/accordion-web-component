@@ -1,16 +1,16 @@
 import AccordionGroupElement from "./AccordionGroup";
 
 const template = document.createElement("template");
-template.innerHTML = `<style>:host{--accordion-padding: 1rem; --accordion-animation-time: 0.25s; display: flex; flex-direction: column; background-color: #ffffff; border-radius: 10px; padding: 0; box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.16); width: 15rem; margin-bottom: 1rem;}button#accordion-header{display: flex; justify-content: space-between; align-items: center; width: 100%; padding: var(--accordion-padding); background-color: transparent; border: none; font-size: 1rem; font-family: inherit; cursor: pointer;}button#accordion-header > svg{transform: rotateX(180deg); transition: var(--accordion-animation-time) ease-in-out transform;}div#accordion-content{display: flex; flex-direction: column; will-change: max-height; max-height: 0; transition: var(--accordion-animation-time) ease-in-out max-height; overflow-y: hidden; padding: 0 var(--accordion-padding);}::slotted(*:last-child){margin-bottom: var(--accordion-padding);}@media (prefers-reduced-motion){div#accordion-content{transition: none;}}</style>
-<button id="accordion-header">
+template.innerHTML = `<style>:host{--accordion-padding: 1rem; --accordion-animation-time: 0.25s; display: flex; flex-direction: column; background-color: #ffffff; border-radius: 10px; padding: 0; box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.16); width: 15rem; margin-bottom: 1rem;}button#accordion-header{display: flex; justify-content: space-between; align-items: center; width: 100%; padding: var(--accordion-padding); background-color: transparent; border: none; font-size: 1rem; font-family: inherit; cursor: pointer;}button#accordion-header > svg{transform: rotateX(180deg); transition: var(--accordion-animation-time) ease-in-out transform;}section#accordion-content{display: flex; flex-direction: column; will-change: max-height; max-height: 0; transition: var(--accordion-animation-time) ease-in-out max-height; overflow-y: hidden; padding: 0 var(--accordion-padding);}::slotted(*:last-child){margin-bottom: var(--accordion-padding);}@media (prefers-reduced-motion){section#accordion-content{transition: none;}}</style>
+<button id="accordion-header" aria-roledescription="heading" type="button">
   <slot name="header"></slot>
-  <svg id="accordion-expander" width="18" height="11" viewBox="0 0 18 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg id="accordion-expander" width="18" height="11" viewBox="0 0 18 11" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M15.885 11L9 4.64257L2.115 11L0 9.0428L9 0.714286L18 9.0428L15.885 11Z" fill="#686569"/>
   </svg>
 </button>
-<div id="accordion-content" inert="true">
+<section id="accordion-content" inert="true" aria-hidden="true">
   <slot id="content-slot"></slot>
-</div>`;
+</section>`;
 
 export default class AccordionItemElement extends HTMLElement {
   #id = self.crypto.randomUUID();
@@ -24,7 +24,7 @@ export default class AccordionItemElement extends HTMLElement {
   #parentAccordionGroupElement =
     this.closest<AccordionGroupElement>("accordion-group");
   #headerElement: HTMLButtonElement;
-  #contentElement: HTMLDivElement;
+  #contentElement: HTMLElement;
   #expanderIconElement: SVGElement;
   #contentSlot: HTMLSlotElement;
 
@@ -47,7 +47,8 @@ export default class AccordionItemElement extends HTMLElement {
   close() {
     this.#contentElement.style.maxHeight = "0";
     this.#expanderIconElement.style.transform = "rotateX(180deg)";
-    this.#contentElement.setAttribute("aria-expanded", "true");
+    this.#contentElement.setAttribute("aria-expanded", "false");
+    this.#contentElement.setAttribute("aria-hidden", "true");
     this.#contentElement.setAttribute("inert", "true");
     this.#isOpened = false;
     this.dispatchEvent(this.#getCloseEvent());
@@ -58,7 +59,8 @@ export default class AccordionItemElement extends HTMLElement {
       this.#contentElement.scrollHeight
     }px`;
     this.#expanderIconElement.style.transform = "rotateX(0)";
-    this.#contentElement.setAttribute("aria-expanded", "false");
+    this.#contentElement.setAttribute("aria-expanded", "true");
+    this.#contentElement.setAttribute("aria-hidden", "false");
     this.#contentElement.removeAttribute("inert");
     this.#isOpened = true;
     this.dispatchEvent(this.#getExpandEvent());
@@ -111,7 +113,7 @@ export default class AccordionItemElement extends HTMLElement {
       "button#accordion-header"
     )!;
     this.#contentElement = this.shadowRoot!.querySelector(
-      "div#accordion-content"
+      "section#accordion-content"
     )!;
     this.#expanderIconElement = this.shadowRoot!.querySelector(
       "svg#accordion-expander"
